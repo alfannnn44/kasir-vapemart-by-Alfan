@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vapestore Pro - Sistem Kasir Multi-Cabang Lengkap</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: #08080a;
+      color: #f1f5f9;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
+
+    .page { display: none; width: 100%; min-height: 100vh; }
+    .page.active { display: flex; }
+
+    /* Top Bar Header */
+    .app-header-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 48px;
+      background: rgba(18, 18, 24, 0.95);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      font-size: 0.85rem;
+    }
+
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge-role {
+      background: #ffffff;
+      color: #08080a;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .has-header { padding-top: 48px; }
+
+    .branch-select {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      outline: none;
+      color-scheme: dark;
+    }
+
+    .branch-select option { background: #121217; color: #ffffff; }
+
+    /* Login Form */
+    .login-wrapper {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: radial-gradient(circle at 50% 30%, #16161d 0%, #08080a 70%);
+      padding: 20px;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 420px;
+      padding: 36px 32px;
+      background: linear-gradient(160deg, rgba(24, 24, 30, 0.85) 0%, rgba(14, 14, 18, 0.95) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 24px;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(20px);
+      text-align: center;
+    }
+
+    .logo-img {
+      max-width: 180px;
+      height: 50px;
+      object-fit: contain;
+      mix-blend-mode: screen;
+      margin-bottom: 16px;
+    }
+
+    .input-group {
+      margin-bottom: 16px;
+      text-align: left;
+    }
+
+    .input-group label {
+      display: block;
+      font-size: 0.78rem;
+      color: #8a8f9d;
+      margin-bottom: 6px;
+    }
+
+    .input-group input, .input-group select {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      color: #ffffff;
+      font-size: 0.88rem;
+      outline: none;
+      color-scheme: dark;
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 14px;
+      margin-top: 8px;
+      background: #ffffff;
+      color: #08080a;
+      border: none;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-logout {
+      padding: 6px 14px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 8px;
+      color: #ffffff;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Dashboard Kasir */
+    .dashboard-container {
+      display: flex;
+      width: 100vw;
+      height: calc(100vh - 48px);
+      overflow: hidden;
+    }
+
+    .main-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 24px 28px;
+      overflow-y: auto;
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .controls-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .search-box { flex: 1; min-width: 200px; }
+    .search-box input {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      color: #ffffff;
+      font-size: 0.88rem;
+      outline: none;
+    }
+
+    .categories { display: flex; gap: 8px; flex-wrap: wrap; }
+    .category-btn {
+      padding: 8px 14px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      color: #8a8f9d;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .category-btn.active { background: #ffffff; color: #08080a; font-weight: 600; }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 16px;
+    }
+
+    .product-card {
+      background: rgba(20, 22, 30, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-height: 110px;
+    }
+
+    .product-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(255, 255, 255, 0.3);
+      background: rgba(30, 34, 46, 0.9);
+    }
+
+    .product-card.out-of-stock {
+      opacity: 0.4;
+      pointer-events: none;
+      filter: grayscale(1);
+    }
+
+    .stock-badge {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #94a3b8;
+    }
+
+    .cart-section {
+      width: 400px;
+      background: rgba(15, 17, 23, 0.95);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border-left: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .cart-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .cart-items {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .cart-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 10px 14px;
+      border-radius: 12px;
+    }
+
+    .cart-item-qty {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+
+    .qty-btn {
+      background: transparent;
+      border: none;
+      color: #ffffff;
+      cursor: pointer;
+      font-weight: bold;
+      width: 20px;
+      height: 20px;
+    }
+
+    .cart-footer {
+      padding: 20px 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(10, 11, 16, 0.8);
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      color: #8a8f9d;
+      margin-bottom: 6px;
+    }
+
+    .summary-row.total {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #ffffff;
+      border-top: 1px dashed rgba(255, 255, 255, 0.12);
+      padding-top: 10px;
+      margin-top: 6px;
+    }
+
+    .checkout-btn {
+      width: 100%;
+      padding: 14px;
+      margin-top: 14px;
+      background: #ffffff;
+      color: #08080a;
+      border: none;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .checkout-btn:disabled {
+      background: rgba(255, 255, 255, 0.15);
+      color: rgba(255, 255, 255, 0.3);
+      cursor: not-allowed;
+    }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+    .modal-card {
+      background: #12141d;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 440px;
+      padding: 24px;
+    }
+
+    .payment-method-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    .pay-tab {
+      flex: 1;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      color: #94a3b8;
+      font-weight: 700;
+      font-size: 0.82rem;
+      cursor: pointer;
+      text-align: center;
+    }
+    .pay-tab.active { background: #ffffff; color: #08080a; border-color: #ffffff; }
+
+    .qris-info-box {
+      text-align: center;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 24px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .split-box { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+    .split-input-group label { font-size: 0.78rem; color: #8a8f9d; display: block; margin-bottom: 4px; }
+    .split-input-group input {
+      width: 100%;
+      padding: 10px 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      color: #fff;
+      font-weight: 700;
+      outline: none;
+    }
+
+    #thermalReceiptModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1001;
+      opacity: 0;
+      pointer-events: none;
+    }
+    #thermalReceiptModal.active { opacity: 1; pointer-events: auto; }
+
+    .receipt-paper {
+      width: 280px;
+      background: #ffffff;
+      color: #000000;
+      padding: 16px 14px;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      line-height: 1.4;
+      border-radius: 4px;
+    }
+
+    .receipt-header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
+    .receipt-line { display: flex; justify-content: space-between; margin-bottom: 4px; }
+    .receipt-divider { border-top: 1px dashed #000; margin: 8px 0; }
+    .receipt-footer { text-align: center; border-top: 1px dashed #000; padding-top: 10px; margin-top: 10px; font-size: 10px; }
+
+    @media print {
+      body * { visibility: hidden; }
+      #printableReceiptArea, #printableReceiptArea * { visibility: visible; }
+      #printableReceiptArea { position: absolute; left: 0; top: 0; width: 58mm; }
+    }
+
+    .dashboard-panel-container {
+      width: 100vw;
+      height: calc(100vh - 48px);
+      padding: 30px 40px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .panel-card {
+      background: rgba(18, 20, 28, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 24px;
+    }
+
+    .inventory-table { width: 100%; border-collapse: collapse; text-align: left; }
+    .inventory-table th { padding: 12px 16px; font-size: 0.8rem; color: #94a3b8; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+    .inventory-table td { padding: 14px 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); font-size: 0.88rem; }
+
+    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+    .metric-card { background: rgba(18, 20, 28, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 20px; }
+
+    .btn-action {
+      padding: 6px 12px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. HALAMAN LOGIN UTAMA -->
+  <div id="loginPage" class="page active">
+    <div class="login-wrapper">
+      <div class="login-card">
+        <img src="WhatsApp_Image_2026-10-21_at_13.26.31-removebg-preview.png" alt="Logo Vapestore Pro" class="logo-img">
+        
+        <h2 style="font-size: 1.3rem; font-weight: 700; color: #fff; margin-bottom: 4px;">ALL VAPE THING START HERE</h2>
+        <p style="font-size: 0.8rem; color: #8a8f9d; margin-bottom: 20px;">Silakan login sesuai hak akses Anda</p>
+
+        <form onsubmit="handleAuthLogin(event)">
+          <div class="input-group">
+            <label>Akses Role Login</label>
+            <select id="loginRole" onchange="onLoginRoleChange()">
+              <option value="kasir">Kasir Cabang</option>
+              <option value="admin">Admin (Kelola Stok)</option>
+              <option value="owner">Owner (Laporan Omset)</option>
+              <option value="pengelola">Pengelola (Super Admin)</option>
+            </select>
+          </div>
+
+          <div class="input-group" id="loginBranchGroup">
+            <label>Pilih Cabang Bertugas</label>
+            <select id="loginBranchSelect" class="branch-select" style="width: 100%;"></select>
+          </div>
+
+          <div class="input-group">
+            <label>Password Akses</label>
+            <input type="password" id="loginPassword" placeholder="Masukkan Password" required>
+          </div>
+
+          <button type="submit" class="btn-login">MASUK KE SISTEM</button>
+          <br>
+          <p style="font-size: 0.8rem; color: #8a8f9d; margin-bottom: 20px;">made-by-alfan oktian</p>
+          <br>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. DASHBOARD SUPER ADMIN / PENGELOLA -->
+  <div id="pengelolaPage" class="page has-header">
+    <div class="app-header-bar">
+      <div class="user-badge">
+        <span class="badge-role">SUPER ADMIN</span>
+        <span>Kelola Password Cabang & Role Global</span>
+      </div>
+      <button class="btn-logout" onclick="logout()">Keluar & Sesi Tutup</button>
+    </div>
+
+    <div class="dashboard-panel-container">
+      <div style="display: grid; grid-template-columns: 360px 1fr; gap: 28px;">
+        <div class="panel-card">
+          <h2 style="font-size: 1.1rem; margin-bottom: 16px; color:#fff;">Password Akses Global Role</h2>
+          <form onsubmit="saveGlobalPasswords(event)">
+            <div class="input-group">
+              <label>Password Pengelola (Super Admin)</label>
+              <input type="text" id="passPengelola" required>
+            </div>
+            <div class="input-group">
+              <label>Password Owner (Laporan Omset)</label>
+              <input type="text" id="passOwner" required>
+            </div>
+            <div class="input-group">
+              <label>Password Admin (Kelola Stok)</label>
+              <input type="text" id="passAdmin" required>
+            </div>
+            <button type="submit" style="width: 100%; padding: 12px; background: #ffffff; color: #08080a; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; margin-top: 8px;">Simpan Password Global</button>
+          </form>
+        </div>
+
+        <div class="panel-card" style="overflow-x: auto;">
+          <h2 style="font-size: 1.1rem; margin-bottom: 16px; color:#fff;">Kelola Password Kasir 13 Cabang</h2>
+          <table class="inventory-table">
+            <thead>
+              <tr>
+                <th>ID Cabang</th>
+                <th>Nama Cabang Toko</th>
+                <th>Password Kasir Saat Ini</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="branchPasswordTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. DASHBOARD OWNER -->
+  <div id="ownerPage" class="page has-header">
+    <div class="app-header-bar">
+      <div class="user-badge">
+        <span class="badge-role">OWNER</span>
+        <span>Monitoring Laporan Omset Vapemart</span>
+      </div>
+      <button class="btn-logout" onclick="logout()">Keluar & Sesi Tutup</button>
+    </div>
+
+    <div class="dashboard-panel-container">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); flex-wrap:gap12px;">
+        <div>
+          <h2>Ringkasan Omset Penjualan Vapestore</h2>
+          <p style="color: #8a8f9d; font-size: 0.85rem;">Pantau tren omset harian seluruh cabang toko</p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <button onclick="exportToCSV()" class="btn-action" style="background:#10b981; border:none; font-weight:700;">Unduh Laporan CSV / Excel</button>
+          <label style="font-size: 0.85rem; color: #94a3b8;">Filter Cabang:</label>
+          <select id="ownerBranchSelect" class="branch-select" onchange="updateOwnerMetricsAndChart()">
+            <option value="all">-- Semua 13 Cabang --</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 6px;">Total Omset</div>
+          <div style="font-size: 1.5rem; font-weight: 800; color: #ffffff;" id="metricOmset">Rp 0</div>
+        </div>
+        <div class="metric-card">
+          <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 6px;">Total Transaksi Selesai</div>
+          <div style="font-size: 1.5rem; font-weight: 800; color: #ffffff;" id="metricTotalTx">0 Transaksi</div>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <h3 style="font-size: 1rem; margin-bottom: 16px;">Grafik Tren Omset</h3>
+        <div style="position: relative; width: 100%; height: 300px;">
+          <canvas id="omsetChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. DASHBOARD KASIR -->
+  <div id="kasirPage" class="page has-header">
+    <div class="app-header-bar">
+      <div class="user-badge">
+        <span class="badge-role">KASIR VAPEMART</span>
+        <span id="kasirActiveBranchHeader" style="font-weight: 700;">Cabang: -</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button onclick="openHistoryModal()" class="btn-action">Riwayat Transaksi Hari Ini</button>
+        <button class="btn-logout" onclick="logout()">Keluar</button>
+      </div>
+    </div>
+
+    <div class="dashboard-container">
+      <main class="main-section">
+        <div class="controls-bar">
+          <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Cari device, liquid, cartridge, coil..." oninput="filterProducts()">
+          </div>
+          <div class="categories">
+            <button class="category-btn active" onclick="selectCategory('all', this)">Semua</button>
+            <button class="category-btn" onclick="selectCategory('cartridge', this)">Cartridge</button>
+            <button class="category-btn" onclick="selectCategory('liquid', this)">Liquid</button>
+            <button class="category-btn" onclick="selectCategory('device', this)">Device</button>
+            <button class="category-btn" onclick="selectCategory('coil', this)">Coil</button>
+            <button class="category-btn" onclick="selectCategory('accessories', this)">Accessories</button>
+            <button class="category-btn" onclick="selectCategory('lainnya', this)">Lain-lain</button>
+          </div>
+        </div>
+
+        <div class="products-grid" id="productsGrid"></div>
+      </main>
+
+      <aside class="cart-section">
+        <div>
+          <div class="cart-header">
+            <h2>Keranjang <span id="cartCount" style="font-size: 0.8rem; color: #8a8f9d;">0 Item</span></h2>
+            <button style="background:transparent; border:none; color:#646c7f; cursor:pointer;" onclick="clearCart()">Kosongkan</button>
+          </div>
+          <div class="cart-items" id="cartItems"></div>
+        </div>
+
+        <div class="cart-footer">
+          <div class="summary-row">
+            <span>Subtotal:</span>
+            <span id="subtotalAmount">Rp 0</span>
+          </div>
+          <div class="summary-row" style="align-items: center;">
+            <span>Diskon (Rp):</span>
+            <input type="number" id="discountInput" placeholder="0" oninput="updateCartUI()" style="width: 120px; padding: 4px 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff; font-size: 0.85rem; text-align: right; outline: none;">
+          </div>
+          <div class="summary-row total">
+            <span>Total Tagihan:</span>
+            <span id="grandTotalAmount">Rp 0</span>
+          </div>
+          <button class="checkout-btn" id="checkoutBtn" onclick="openPaymentModal()" disabled>Pilih Pembayaran</button>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- 5. DASHBOARD ADMIN (KELOLA STOK VAPESTORE) -->
+  <div id="adminPage" class="page has-header">
+    <div class="app-header-bar">
+      <div class="user-badge">
+        <span class="badge-role">ADMIN</span>
+        <span>Kelola Inventaris Vapestore</span>
+      </div>
+      <button class="btn-logout" onclick="logout()">Keluar & Sesi Tutup</button>
+    </div>
+
+    <div class="dashboard-panel-container">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <h2>Kelola Inventaris Vapestore Per Cabang</h2>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <label style="font-size: 0.85rem; color: #94a3b8;">Pilih Cabang Dikelola:</label>
+          <select id="adminBranchSelect" class="branch-select" onchange="renderAdminInventory()"></select>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 360px 1fr; gap: 28px;">
+        <div class="panel-card">
+          <h3 style="font-size: 1rem; margin-bottom: 16px;">+ Tambah Item Vapestore</h3>
+          <form onsubmit="handleAddProduct(event)">
+            <div class="input-group">
+              <label>Nama Item / Produk</label>
+              <input type="text" id="newProdName" placeholder="Contoh: Cartridge Caliburn 0.8 Ohm" required>
+            </div>
+            <div class="input-group">
+              <label>Kategori</label>
+              <select id="newProdCategory">
+                <option value="cartridge">Cartridge</option>
+                <option value="liquid">Liquid</option>
+                <option value="device">Device</option>
+                <option value="coil">Coil</option>
+                <option value="accessories">Accessories</option>
+                <option value="lainnya">Lain-lain</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label>Harga (Rp)</label>
+              <input type="number" id="newProdPrice" placeholder="45000" required>
+            </div>
+            <div class="input-group">
+              <label>Stok Awal</label>
+              <input type="number" id="newProdStock" placeholder="20" required>
+            </div>
+            <button type="submit" style="width: 100%; padding: 12px; background: #ffffff; color: #08080a; border: none; border-radius: 10px; font-weight: 700; cursor: pointer;">Simpan ke Cabang</button>
+          </form>
+        </div>
+
+        <div class="panel-card" style="overflow-x: auto;">
+          <h3 style="font-size: 1rem; margin-bottom: 16px;">Daftar Stok Vapestore - <span id="adminBranchTitleName">Cabang</span></h3>
+          <table class="inventory-table">
+            <thead>
+              <tr>
+                <th>Nama Item</th>
+                <th>Kategori</th>
+                <th>Harga</th>
+                <th>Stok Cabang</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="inventoryTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL RIWAYAT TRANSAKSI & VOID -->
+  <div class="modal-overlay" id="historyModal">
+    <div class="modal-card" style="max-width: 650px;">
+      <h3 style="margin-bottom: 16px; font-size: 1.1rem; text-align: center;">Riwayat Transaksi Hari Ini</h3>
+      <div style="max-height: 350px; overflow-y: auto; margin-bottom: 20px;">
+        <table class="inventory-table">
+          <thead>
+            <tr>
+              <th>No. TRX</th>
+              <th>Waktu</th>
+              <th>Total</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody"></tbody>
+        </table>
+      </div>
+      <button style="width: 100%; padding: 10px; background: rgba(255,255,255,0.2); color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;" onclick="closeHistoryModal()">Tutup</button>
+    </div>
+  </div>
+
+  <!-- MODAL PEMBAYARAN -->
+  <div class="modal-overlay" id="paymentModal">
+    <div class="modal-card">
+      <h3 style="margin-bottom: 16px; font-size: 1.1rem; text-align: center;">Pilih Pembayaran</h3>
+      
+      <div class="payment-method-tabs">
+        <div class="pay-tab active" id="tabQris" onclick="selectPayMethod('qris')">QRIS</div>
+        <div class="pay-tab" id="tabCash" onclick="selectPayMethod('cash')">Tunai</div>
+        <div class="pay-tab" id="tabSplit" onclick="selectPayMethod('split')">Split Payment</div>
+      </div>
+
+      <div id="qrisView">
+        <div class="qris-info-box">
+          <p style="font-size: 0.9rem; font-weight: 700; color: #fff;">Pembayaran QRIS</p>
+          <p style="font-size: 0.8rem; color: #8a8f9d; margin-top: 6px;">Lakukan scan QRIS pada EDC / Akun Merchant Toko</p>
+        </div>
+      </div>
+
+      <div id="cashView" style="display: none;">
+        <div class="split-input-group" style="margin-bottom: 16px;">
+          <label>Uang Tunai Diterima (Rp)</label>
+          <input type="number" id="cashAmountInput" placeholder="0" oninput="calculateCashChange()">
+        </div>
+        <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px; margin-bottom: 20px; display:flex; justify-content:space-between;">
+          <span style="font-size: 0.85rem; color:#8a8f9d;">Kembalian:</span>
+          <span id="cashChangeText" style="color: #10b981; font-weight: 700;">Rp 0</span>
+        </div>
+      </div>
+
+      <div id="splitView" style="display: none;">
+        <div class="split-box">
+          <div class="split-input-group">
+            <label>Nominal Pembayaran QRIS (Rp)</label>
+            <input type="number" id="splitQrisInput" placeholder="Contoh: 10000" oninput="calculateSplitPayment()">
+          </div>
+          <div class="split-input-group">
+            <label>Nominal Pembayaran Tunai (Rp)</label>
+            <input type="number" id="splitCashInput" placeholder="Contoh: 30000" oninput="calculateSplitPayment()">
+          </div>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px; margin-bottom: 20px; font-size: 0.85rem;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px; color:#8a8f9d;">
+            <span>Total Tagihan:</span><span id="splitTotalTagihan">Rp 0</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px; color:#8a8f9d;">
+            <span>Sisa Belum Terbayar:</span><span id="splitSisaBayar" style="color:#f87171; font-weight:700;">Rp 0</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; color:#8a8f9d;">
+            <span>Kembalian Tunai:</span><span id="splitKembalianCash" style="color:#10b981; font-weight:700;">Rp 0</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px;">
+        <button style="flex:1; padding: 12px; background: transparent; border: 1px solid rgba(255,255,255,0.2); color:#fff; border-radius: 10px; cursor:pointer;" onclick="closePaymentModal()">Batal</button>
+        <button style="flex:1; padding: 12px; background: #fff; color:#08080a; border: none; font-weight: 700; border-radius: 10px; cursor:pointer;" onclick="confirmTransaction()">Selesaikan & Cetak</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STRUK TERMAL -->
+  <div id="thermalReceiptModal">
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 16px;">
+      <div class="receipt-paper" id="printableReceiptArea">
+        <div class="receipt-header">
+          <h2>VAPESTORE PRO</h2>
+          <p id="recBranchName">Cabang</p>
+          <p id="recDateTime">21/10/2026</p>
+          <p id="recTxId">No: #TX9999</p>
+        </div>
+        <div class="receipt-items" id="recItemsList"></div>
+        <div class="receipt-divider"></div>
+        <div class="receipt-line"><span>Subtotal</span><span id="recSubtotal">Rp 0</span></div>
+        <div class="receipt-line"><span>Diskon</span><span id="recDiscount">Rp 0</span></div>
+        <div class="receipt-line" style="font-weight:700; font-size:12px;"><span>TOTAL</span><span id="recTotal">Rp 0</span></div>
+        <div class="receipt-divider"></div>
+        <div class="receipt-line"><span>Metode</span><span id="recMethod">QRIS</span></div>
+        <div id="recPaymentDetail"></div>
+        <div class="receipt-footer">
+          <p>*** TERIMA KASIH ***</p>
+          <p>Keep Vaping & Enjoy!</p>
+        </div>
+      </div>
+      <div style="display: flex; gap: 10px; width: 100%;">
+        <button style="flex: 1; padding: 10px; background: rgba(255,255,255,0.2); border: none; color: #fff; border-radius: 8px; cursor: pointer;" onclick="closeReceiptModal()">Tutup</button>
+        <button style="flex: 1; padding: 10px; background: #fff; border: none; color: #000; font-weight: 700; border-radius: 8px; cursor: pointer;" onclick="window.print()">Cetak Struk Termal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT SYSTEM ENGINE WITH LOCALSTORAGE -->
+  <script>
+    let branches = [
+      { id: 'cisangkuy', name: 'Cisangkuy', password: '123' },
+      { id: 'pramuka', name: 'Pramuka', password: '123' },
+      { id: 'cijawura', name: 'Cijawura', password: '123' },
+      { id: 'jatiserut', name: 'Jatiserut', password: '123' },
+      { id: 'gatsu', name: 'Gatsu', password: '123' },
+      { id: 'cijambe', name: 'Cijambe', password: '123' },
+      { id: 'permata_biru', name: 'Permata Biru', password: '123' },
+      { id: 'pandanwangi', name: 'Pandanwangi', password: '123' },
+      { id: 'sindanglaya', name: 'Sindanglaya', password: '123' },
+      { id: 'arwinda', name: 'Arwinda', password: '123' },
+      { id: 'hajigofur', name: 'Haji Gofur', password: '123' },
+      { id: 'gandasari', name: 'Gandasari', password: '123' },
+      { id: 'saparua', name: 'Saparua', password: '123' }
+    ];
+
+    let passwords = JSON.parse(localStorage.getItem('vape_passwords')) || { pengelola: '123', owner: '123', admin: '123' };
+    let activeSession = null;
+
+    let products = JSON.parse(localStorage.getItem('vape_products')) || [
+      { id: 1, branchId: 'cisangkuy', name: "Cartridge Caliburn 0.8 Ohm", category: "cartridge", price: 45000, stock: 30 },
+      { id: 2, branchId: 'cisangkuy', name: "Liquid Saltnic Mango Ice 30ml", category: "liquid", price: 120000, stock: 15 },
+      { id: 3, branchId: 'pramuka', name: "XROS Pod Kit Device", category: "device", price: 320000, stock: 10 },
+      { id: 4, branchId: 'saparua', name: "Coil VINCI 0.3 Ohm", category: "coil", price: 35000, stock: 25 }
+    ];
+
+    let transactions = JSON.parse(localStorage.getItem('vape_transactions')) || [];
+
+    let cart = [];
+    let currentCategory = 'all';
+    let searchQuery = '';
+    let selectedPayMethod = 'qris';
+    let currentSubtotal = 0;
+    let currentDiscount = 0;
+    let currentTotal = 0;
+    let omsetChartInstance = null;
+
+    function saveToLocalStorage() {
+      localStorage.setItem('vape_products', JSON.stringify(products));
+      localStorage.setItem('vape_transactions', JSON.stringify(transactions));
+      localStorage.setItem('vape_passwords', JSON.stringify(passwords));
+    }
+
+    function populateDropdowns() {
+      const loginSelect = document.getElementById('loginBranchSelect');
+      const ownerSelect = document.getElementById('ownerBranchSelect');
+      const adminSelect = document.getElementById('adminBranchSelect');
+
+      loginSelect.innerHTML = '';
+      ownerSelect.innerHTML = '<option value="all">-- Semua 13 Cabang --</option>';
+      adminSelect.innerHTML = '';
+
+      branches.forEach(b => {
+        loginSelect.add(new Option(b.name, b.id));
+        ownerSelect.add(new Option(b.name, b.id));
+        adminSelect.add(new Option(b.name, b.id));
+      });
+    }
+
+    function onLoginRoleChange() {
+      const role = document.getElementById('loginRole').value;
+      document.getElementById('loginBranchGroup').style.display = role === 'kasir' ? 'block' : 'none';
+    }
+
+    function handleAuthLogin(e) {
+      e.preventDefault();
+      const role = document.getElementById('loginRole').value;
+      const inputPass = document.getElementById('loginPassword').value;
+
+      if (role === 'pengelola') {
+        if (inputPass === passwords.pengelola) {
+          activeSession = { role: 'pengelola' };
+          showView('pengelolaPage');
+          renderPengelolaDashboard();
+        } else alert('Password Pengelola Salah!');
+      } else if (role === 'owner') {
+        if (inputPass === passwords.owner) {
+          activeSession = { role: 'owner' };
+          showView('ownerPage');
+          updateOwnerMetricsAndChart();
+        } else alert('Password Owner Salah!');
+      } else if (role === 'admin') {
+        if (inputPass === passwords.admin) {
+          activeSession = { role: 'admin' };
+          showView('adminPage');
+          renderAdminInventory();
+        } else alert('Password Admin Salah!');
+      } else if (role === 'kasir') {
+        const branchId = document.getElementById('loginBranchSelect').value;
+        const bObj = branches.find(b => b.id === branchId);
+        if (bObj && inputPass === bObj.password) {
+          activeSession = { role: 'kasir', branchId: bObj.id, branchName: bObj.name };
+          document.getElementById('kasirActiveBranchHeader').innerText = `Cabang: ${bObj.name}`;
+          showView('kasirPage');
+          renderProducts();
+        } else alert('Password Cabang Salah!');
+      }
+    }
+
+    function showView(pageId) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+    }
+
+    function logout() {
+      activeSession = null;
+      document.getElementById('loginPassword').value = '';
+      showView('loginPage');
+    }
+
+    function formatRupiah(num) {
+      return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
+    }
+
+    /* Super Admin */
+    function renderPengelolaDashboard() {
+      document.getElementById('passPengelola').value = passwords.pengelola;
+      document.getElementById('passOwner').value = passwords.owner;
+      document.getElementById('passAdmin').value = passwords.admin;
+
+      const tbody = document.getElementById('branchPasswordTableBody');
+      tbody.innerHTML = '';
+      branches.forEach(b => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${b.id}</td>
+            <td><b>${b.name}</b></td>
+            <td><input type="text" id="pass_branch_${b.id}" value="${b.password}" style="padding:6px 10px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.2); color:#fff; border-radius:6px; font-weight:bold;"></td>
+            <td><button onclick="updateBranchPassword('${b.id}')" style="padding:6px 12px; background:#fff; color:#000; border:none; border-radius:6px; cursor:pointer; font-weight:700;">Simpan</button></td>
+          </tr>
+        `;
+      });
+    }
+
+    function saveGlobalPasswords(e) {
+      e.preventDefault();
+      passwords.pengelola = document.getElementById('passPengelola').value;
+      passwords.owner = document.getElementById('passOwner').value;
+      passwords.admin = document.getElementById('passAdmin').value;
+      saveToLocalStorage();
+      alert('Password Global Berhasil Diperbarui!');
+    }
+
+    function updateBranchPassword(branchId) {
+      const newPass = document.getElementById(`pass_branch_${branchId}`).value;
+      const b = branches.find(item => item.id === branchId);
+      if (b) {
+        b.password = newPass;
+        saveToLocalStorage();
+        alert(`Password untuk ${b.name} berhasil diperbarui!`);
+      }
+    }
+
+    /* Admin Inventory */
+    function renderAdminInventory() {
+      const selectedBranchId = document.getElementById('adminBranchSelect').value;
+      const bObj = branches.find(b => b.id === selectedBranchId);
+      document.getElementById('adminBranchTitleName').innerText = bObj ? bObj.name : '';
+
+      const tbody = document.getElementById('inventoryTableBody');
+      tbody.innerHTML = '';
+
+      const branchProds = products.filter(p => p.branchId === selectedBranchId);
+      if (branchProds.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#646c7f; padding:30px;">Belum ada item di cabang ini.</td></tr>`;
+        return;
+      }
+
+      branchProds.forEach(p => {
+        tbody.innerHTML += `
+          <tr>
+            <td><b>${p.name}</b></td>
+            <td><span style="text-transform:uppercase; font-size:0.75rem; color:#8a8f9d;">${p.category}</span></td>
+            <td>${formatRupiah(p.price)}</td>
+            <td>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <button style="width:24px; height:24px; background:rgba(255,255,255,0.1); border:none; color:#fff; border-radius:4px; cursor:pointer;" onclick="adjustStock(${p.id}, -1)">-</button>
+                <b>${p.stock}</b>
+                <button style="width:24px; height:24px; background:rgba(255,255,255,0.1); border:none; color:#fff; border-radius:4px; cursor:pointer;" onclick="adjustStock(${p.id}, 1)">+</button>
+              </div>
+            </td>
+            <td><button style="padding:4px 10px; background:rgba(239,68,68,0.2); border:1px solid rgba(239,68,68,0.4); color:#f87171; border-radius:6px; cursor:pointer;" onclick="deleteProduct(${p.id})">Hapus</button></td>
+          </tr>
+        `;
+      });
+    }
+
+    function handleAddProduct(e) {
+      e.preventDefault();
+      const targetBranchId = document.getElementById('adminBranchSelect').value;
+
+      products.push({
+        id: Date.now(),
+        branchId: targetBranchId,
+        name: document.getElementById('newProdName').value,
+        category: document.getElementById('newProdCategory').value,
+        price: parseInt(document.getElementById('newProdPrice').value),
+        stock: parseInt(document.getElementById('newProdStock').value)
+      });
+
+      saveToLocalStorage();
+      alert('Item Vapestore berhasil ditambahkan!');
+      document.getElementById('newProdName').value = '';
+      document.getElementById('newProdPrice').value = '';
+      document.getElementById('newProdStock').value = '';
+      renderAdminInventory();
+    }
+
+    function adjustStock(id, delta) {
+      const p = products.find(prod => prod.id === id);
+      if (p) {
+        p.stock = Math.max(0, p.stock + delta);
+        saveToLocalStorage();
+        renderAdminInventory();
+      }
+    }
+
+    function deleteProduct(id) {
+      if (confirm('Hapus item ini?')) {
+        products = products.filter(p => p.id !== id);
+        saveToLocalStorage();
+        renderAdminInventory();
+      }
+    }
+
+    /* Kasir Engine */
+    function renderProducts() {
+      if (!activeSession || activeSession.role !== 'kasir') return;
+
+      const grid = document.getElementById('productsGrid');
+      grid.innerHTML = '';
+
+      const filtered = products.filter(p => {
+        const matchBranch = p.branchId === activeSession.branchId;
+        const matchCat = currentCategory === 'all' || p.category === currentCategory;
+        const matchSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchBranch && matchCat && matchSearch;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #646c7f; padding: 40px;">Belum ada item di kategori ini.</p>`;
+        return;
+      }
+
+      filtered.forEach(p => {
+        const isOutOfStock = p.stock <= 0;
+        const card = document.createElement('div');
+        card.className = `product-card ${isOutOfStock ? 'out-of-stock' : ''}`;
+        card.onclick = () => { if(!isOutOfStock) addToCart(p.id); };
+
+        card.innerHTML = `
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+              <span style="font-size:0.7rem; color:#8a8f9d; text-transform:uppercase; font-weight:700;">${p.category}</span>
+              <span class="stock-badge">${isOutOfStock ? 'Habis' : `Stok: ${p.stock}`}</span>
+            </div>
+            <div style="font-size:0.95rem; font-weight:700; color:#ffffff; margin-bottom: 12px;">${p.name}</div>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-weight:800; font-size:1rem; color:#f1f5f9;">${formatRupiah(p.price)}</span>
+            <div style="width:28px; height:28px; background:rgba(255,255,255,0.1); border-radius:6px; display:flex; align-items:center; justify-content:center; font-weight:bold;">+</div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function addToCart(id) {
+      const prod = products.find(p => p.id === id);
+      const item = cart.find(c => c.id === id);
+
+      if (item) {
+        if (item.qty < prod.stock) item.qty++;
+        else alert('Stok tidak mencukupi!');
+      } else {
+        cart.push({ id: prod.id, name: prod.name, price: prod.price, qty: 1 });
+      }
+      updateCartUI();
+    }
+
+    function updateQty(id, delta) {
+      const item = cart.find(c => c.id === id);
+      const prod = products.find(p => p.id === id);
+      if (!item) return;
+
+      if (delta > 0 && item.qty >= prod.stock) {
+        alert('Stok cabang tidak mencukupi!');
+        return;
+      }
+
+      item.qty += delta;
+      if (item.qty <= 0) cart = cart.filter(c => c.id !== id);
+      updateCartUI();
+    }
+
+    function clearCart() { 
+      cart = []; 
+      document.getElementById('discountInput').value = '';
+      updateCartUI(); 
+    }
+
+    function updateCartUI() {
+      const cartContainer = document.getElementById('cartItems');
+      const checkoutBtn = document.getElementById('checkoutBtn');
+
+      if (cart.length === 0) {
+        cartContainer.innerHTML = `<div style="color: #646c7f; text-align: center; margin-top: 40px;">Keranjang kosong</div>`;
+        checkoutBtn.disabled = true;
+      } else {
+        cartContainer.innerHTML = '';
+        cart.forEach(item => {
+          const el = document.createElement('div');
+          el.className = 'cart-item';
+          el.innerHTML = `
+            <div>
+              <div style="font-size:0.88rem; font-weight:600;">${item.name}</div>
+              <div style="font-size:0.8rem; color:#8a8f9d;">${formatRupiah(item.price * item.qty)}</div>
+            </div>
+            <div class="cart-item-qty">
+              <button class="qty-btn" onclick="updateQty(${item.id}, -1)">-</button>
+              <span>${item.qty}</span>
+              <button class="qty-btn" onclick="updateQty(${item.id}, 1)">+</button>
+            </div>
+          `;
+          cartContainer.appendChild(el);
+        });
+        checkoutBtn.disabled = false;
+      }
+
+      currentSubtotal = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+      currentDiscount = parseFloat(document.getElementById('discountInput').value) || 0;
+      currentTotal = Math.max(0, currentSubtotal - currentDiscount);
+
+      document.getElementById('cartCount').innerText = `${cart.reduce((s, i) => s + i.qty, 0)} Item`;
+      document.getElementById('subtotalAmount').innerText = formatRupiah(currentSubtotal);
+      document.getElementById('grandTotalAmount').innerText = formatRupiah(currentTotal);
+    }
+
+    function openPaymentModal() {
+      document.getElementById('paymentModal').classList.add('active');
+      selectPayMethod('qris');
+    }
+
+    function closePaymentModal() {
+      document.getElementById('paymentModal').classList.remove('active');
+    }
+
+    function selectPayMethod(method) {
+      selectedPayMethod = method;
+      document.getElementById('tabQris').classList.toggle('active', method === 'qris');
+      document.getElementById('tabCash').classList.toggle('active', method === 'cash');
+      document.getElementById('tabSplit').classList.toggle('active', method === 'split');
+
+      document.getElementById('qrisView').style.display = method === 'qris' ? 'block' : 'none';
+      document.getElementById('cashView').style.display = method === 'cash' ? 'block' : 'none';
+      document.getElementById('splitView').style.display = method === 'split' ? 'block' : 'none';
+
+      if (method === 'split') {
+        document.getElementById('splitTotalTagihan').innerText = formatRupiah(currentTotal);
+        calculateSplitPayment();
+      }
+    }
+
+    function calculateCashChange() {
+      const input = parseFloat(document.getElementById('cashAmountInput').value) || 0;
+      const change = input - currentTotal;
+      document.getElementById('cashChangeText').innerText = formatRupiah(Math.max(0, change));
+    }
+
+    function calculateSplitPayment() {
+      const qrisVal = parseFloat(document.getElementById('splitQrisInput').value) || 0;
+      const cashVal = parseFloat(document.getElementById('splitCashInput').value) || 0;
+      
+      const totalPaid = qrisVal + cashVal;
+      const sisa = currentTotal - totalPaid;
+      const change = totalPaid - currentTotal;
+
+      document.getElementById('splitSisaBayar').innerText = formatRupiah(Math.max(0, sisa));
+      document.getElementById('splitKembalianCash').innerText = formatRupiah(Math.max(0, change));
+    }
+
+    function confirmTransaction() {
+      if (selectedPayMethod === 'split') {
+        const qrisVal = parseFloat(document.getElementById('splitQrisInput').value) || 0;
+        const cashVal = parseFloat(document.getElementById('splitCashInput').value) || 0;
+        if ((qrisVal + cashVal) < currentTotal) {
+          alert('Nominal Split Payment (QRIS + Tunai) masih kurang dari Total Tagihan!');
+          return;
+        }
+      }
+
+      cart.forEach(item => {
+        const p = products.find(prod => prod.id === item.id);
+        if (p) p.stock -= item.qty;
+      });
+
+      const txData = {
+        id: 'TX' + Date.now().toString().slice(-4),
+        branchId: activeSession.branchId,
+        branchName: activeSession.branchName,
+        date: new Date().toISOString().split('T')[0],
+        time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+        subtotal: currentSubtotal,
+        discount: currentDiscount,
+        total: currentTotal,
+        method: selectedPayMethod.toUpperCase(),
+        items: JSON.parse(JSON.stringify(cart))
+      };
+
+      transactions.push(txData);
+      saveToLocalStorage();
+
+      document.getElementById('recBranchName').innerText = `Cabang ${activeSession.branchName}`;
+      document.getElementById('recDateTime').innerText = `${txData.date} ${txData.time}`;
+      document.getElementById('recTxId').innerText = 'No: #' + txData.id;
+
+      const itemsList = document.getElementById('recItemsList');
+      itemsList.innerHTML = '';
+      cart.forEach(i => {
+        itemsList.innerHTML += `<div class="receipt-line"><span>${i.name} x${i.qty}</span><span>${formatRupiah(i.price * i.qty)}</span></div>`;
+      });
+
+      document.getElementById('recSubtotal').innerText = formatRupiah(currentSubtotal);
+      document.getElementById('recDiscount').innerText = formatRupiah(currentDiscount);
+      document.getElementById('recTotal').innerText = formatRupiah(currentTotal);
+      document.getElementById('recMethod').innerText = selectedPayMethod.toUpperCase();
+
+      const payDetailDiv = document.getElementById('recPaymentDetail');
+      if (selectedPayMethod === 'split') {
+        const qrisVal = parseFloat(document.getElementById('splitQrisInput').value) || 0;
+        const cashVal = parseFloat(document.getElementById('splitCashInput').value) || 0;
+        const change = (qrisVal + cashVal) - currentTotal;
+        payDetailDiv.innerHTML = `
+          <div class="receipt-line"><span>Bayar QRIS</span><span>${formatRupiah(qrisVal)}</span></div>
+          <div class="receipt-line"><span>Bayar Tunai</span><span>${formatRupiah(cashVal)}</span></div>
+          <div class="receipt-line"><span>Kembali Tunai</span><span>${formatRupiah(Math.max(0, change))}</span></div>
+        `;
+      } else if (selectedPayMethod === 'cash') {
+        const cashVal = parseFloat(document.getElementById('cashAmountInput').value) || currentTotal;
+        payDetailDiv.innerHTML = `
+          <div class="receipt-line"><span>Bayar Tunai</span><span>${formatRupiah(cashVal)}</span></div>
+          <div class="receipt-line"><span>Kembali</span><span>${formatRupiah(Math.max(0, cashVal - currentTotal))}</span></div>
+        `;
+      } else {
+        payDetailDiv.innerHTML = `<div class="receipt-line"><span>Bayar QRIS</span><span>${formatRupiah(currentTotal)}</span></div>`;
+      }
+
+      closePaymentModal();
+      document.getElementById('thermalReceiptModal').classList.add('active');
+    }
+
+    function closeReceiptModal() {
+      document.getElementById('thermalReceiptModal').classList.remove('active');
+      clearCart();
+      renderProducts();
+    }
+
+    /* History & Void Engine */
+    function openHistoryModal() {
+      if (!activeSession) return;
+      const tbody = document.getElementById('historyTableBody');
+      tbody.innerHTML = '';
+
+      const today = new Date().toISOString().split('T')[0];
+      const branchTx = transactions.filter(t => t.branchId === activeSession.branchId && t.date === today);
+
+      if (branchTx.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#646c7f; padding:20px;">Belum ada transaksi hari ini.</td></tr>`;
+      } else {
+        branchTx.forEach(t => {
+          tbody.innerHTML += `
+            <tr>
+              <td><b>#${t.id}</b></td>
+              <td>${t.time}</td>
+              <td>${formatRupiah(t.total)}</td>
+              <td><button onclick="voidTransaction('${t.id}')" style="padding:4px 10px; background:rgba(239,68,68,0.2); border:1px solid rgba(239,68,68,0.4); color:#f87171; border-radius:6px; cursor:pointer;">Void (Batalkan)</button></td>
+            </tr>
+          `;
+        });
+      }
+      document.getElementById('historyModal').classList.add('active');
+    }
+
+    function closeHistoryModal() {
+      document.getElementById('historyModal').classList.remove('active');
+    }
+
+    function voidTransaction(txId) {
+      if (confirm(`Batalkan transaksi #${txId}? Stok produk akan dikembalikan otomatis.`)) {
+        const txIndex = transactions.findIndex(t => t.id === txId);
+        if (txIndex !== -1) {
+          const tx = transactions[txIndex];
+          tx.items.forEach(item => {
+            const prod = products.find(p => p.id === item.id);
+            if (prod) prod.stock += item.qty;
+          });
+          transactions.splice(txIndex, 1);
+          saveToLocalStorage();
+          alert('Transaksi berhasil di-void dan stok dikembalikan.');
+          openHistoryModal();
+          renderProducts();
+        }
+      }
+    }
+
+    function selectCategory(cat, btn) {
+      currentCategory = cat;
+      document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderProducts();
+    }
+
+    function filterProducts() {
+      searchQuery = document.getElementById('searchInput').value;
+      renderProducts();
+    }
+
+    /* Owner Metrics & Export */
+    function updateOwnerMetricsAndChart() {
+      const selectedBranch = document.getElementById('ownerBranchSelect').value;
+
+      const filtered = transactions.filter(t => selectedBranch === 'all' || t.branchId === selectedBranch);
+      const totalOmset = filtered.reduce((sum, t) => sum + t.total, 0);
+
+      document.getElementById('metricOmset').innerText = formatRupiah(totalOmset);
+      document.getElementById('metricTotalTx').innerText = `${filtered.length} Transaksi`;
+
+      const dailyMap = {};
+      filtered.forEach(t => { dailyMap[t.date] = (dailyMap[t.date] || 0) + t.total; });
+
+      const labels = Object.keys(dailyMap).sort();
+      const chartData = labels.map(d => dailyMap[d]);
+
+      renderOmsetChart(labels, chartData);
+    }
+
+    function renderOmsetChart(labels, data) {
+      const ctx = document.getElementById('omsetChart').getContext('2d');
+      if (omsetChartInstance) omsetChartInstance.destroy();
+
+      omsetChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels.length > 0 ? labels : ['Belum Ada Data'],
+          datasets: [{
+            label: 'Omset Vapestore (Rp)',
+            data: data.length > 0 ? data : [0],
+            borderColor: '#ffffff',
+            backgroundColor: 'rgba(255, 255, 255, 0.08)',
+            fill: true,
+            tension: 0.35,
+            pointBackgroundColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#8a8f9d' } },
+            y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#8a8f9d', callback: v => 'Rp ' + (v/1000) + 'rb' } }
+          }
+        }
+      });
+    }
+
+    function exportToCSV() {
+      if (transactions.length === 0) {
+        alert('Belum ada data transaksi untuk diexport.');
+        return;
+      }
+
+      let csvContent = "data:text/csv;charset=utf-8,ID Transaksi,ID Cabang,Nama Cabang,Tanggal,Waktu,Subtotal,Diskon,Total,Metode Pembayaran\n";
+      transactions.forEach(t => {
+        csvContent += `${t.id},${t.branchId},${t.branchName},${t.date},${t.time},${t.subtotal},${t.discount},${t.total},${t.method}\n`;
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `laporan_omset_vapestore_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Init
+    populateDropdowns();
+    onLoginRoleChange();
+  </script>
+</body>
+</html>
